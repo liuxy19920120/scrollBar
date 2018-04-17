@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title></title>
+		<style>
+			ul {
+				margin: 0;
+				padding: 0;
+			}
+			.customBar {
+				width: 500px;
+				height: 500px;
+				border: 1px solid #000;
+				position: relative;
+				overflow: hidden;
+			}
+
+			#box {
+				width: 50px;
+				height: 100%;
+				border-left: 1px solid #000;
+				position: absolute;
+				right: 0;
+				top: 0;
+			}
+			#bar {
+				width: 100%;
+				height: 50px;
+				position: absolute;
+				left: 0;
+				top: 0;
+				background: red;
+			}
+			#list {
+				position: absolute;
+				left: 0;
+				top: 0;
+				margin-top: 40px;
+			}
+		</style>
+		<script>
+			
+		</script>
+	</head>
+
+	<body>
+		
+		<div class="customBar" id='customBar'>
+			<ul id="list">
+				<li>123</li>
+				<li>123</li>
+				<li>123</li>
+				<li>123</li>
+				<li>123</li>
+			</ul>
+			<div id="box">
+				<div id="bar"></div>
+			</div>
+		</div>
+
+		
+		<script>
+			var listLi = '<li>start</li>';
+			for( var i = 0; i < 100; i++ ){
+				listLi += '<li>'+(i+1)+'</li>'
+			}
+			listLi += '<li>end</li>';
+
+			list.innerHTML = listLi;
+
+			var box = document.getElementById("box");
+			var bar = document.getElementById("bar");
+
+//			var customBar = document.querySelector(".customBar");
+			var customBar = document.getElementById("customBar");
+
+			// 计算滚动条的高度， 内容越高，滚动条越小
+
+			var customBarH = customBar.clientHeight;  // 滚动的可视区高度
+			var boxH = box.clientHeight; // 右边滚动条容器高度
+			// 元素的高度
+			//var listH = list.offsetHeight;
+			//console.log(listH);
+			// 一个元素的内容（内部）高度
+			var customBarScrollH = customBar.scrollHeight;
+
+			var barH = Math.round(customBarH/customBarScrollH * boxH);
+
+			// 当滚动条的高度和可视区的高度相同了，就不出现滚动条
+			if(barH === boxH){
+				box.style.display = 'none'
+			}else{
+				bar.style.height = barH + 'px';
+			}
+
+			// 最小
+			var minT = 0;
+			// 最大
+			var maxT = boxH - bar.offsetHeight;
+
+			// 左边内容的最小运动距离 和最大运动距离
+			var leftMinT = 0;
+			var leftMaxT = customBarScrollH - customBarH;
+			
+			bar.onmousedown = function (ev){
+				var ev = ev || event
+				var disY = ev.clientY - bar.offsetTop;	
+				document.onmousemove = function (ev){
+					var ev = ev || event
+					var y = ev.clientY - disY;
+					if(y<minT) {
+						y = minT;
+					}
+					if(y>maxT) {
+						y = maxT;
+					}
+
+					bar.style.top = y + 'px';	
+
+					list.style.top = -y/maxT * leftMaxT + 'px';
+
+				};
+				document.onmouseup = function (){
+					document.onmousemove = null;	
+				};
+
+				if(ev.preventDefault){
+					ev.preventDefault();
+				}else{
+					return false;
+				}
+			}
+
+			mousewheel(customBar, function (ev){
+				var y = bar.offsetTop - 5;
+
+				if(y < minT) y = minT;
+
+				bar.style.top = y + 'px';
+				list.style.top = -y/maxT * leftMaxT + 'px';
+
+				if(ev.preventDefault){
+					ev.preventDefault();
+				}else{
+					return false;
+				}
+
+			}, function (ev){
+				var y = bar.offsetTop + 5;
+
+				if(y > maxT) y = maxT;
+
+				bar.style.top = y + 'px';
+				list.style.top = -y/maxT * leftMaxT + 'px';
+				if(ev.preventDefault){
+					ev.preventDefault();
+				}else{
+					return false;
+				}
+			})
+
+
+			function mousewheel(element,upFn,downFn){
+				if(!element || element.nodeType !== 1){
+					throw new Error("element not a node");
+					return ;
+				}
+				element.onmousewheel = fn;
+				if(element.addEventListener){
+					element.addEventListener("DOMMouseScroll",fn)
+				}	
+
+				function fn(ev){
+					var e = ev || event;
+					var direction = true;
+					if(e.wheelDelta){
+						direction = e.wheelDelta > 0 ? true : false;
+					}
+					if(e.detail){
+						direction = e.detail < 0 ? true : false;
+					}
+
+					if(direction){  // 向上
+						typeof upFn === 'function' && upFn.call(element,e);
+					}else{  // 向下
+						typeof downFn === 'function' && downFn.call(element,e);
+					}
+
+					//e.preventDefault();
+				}
+			}
+		</script>
+	</body>
+</html>
